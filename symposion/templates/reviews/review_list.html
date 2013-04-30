@@ -4,11 +4,18 @@
 	<h3>{{ section }}</h3>
 	{% if reviewed == 'all_reviews' %}
     	<h4>All proposals</h4>
+    	<p>(<a href="{% url user_reviewed section.section.slug %}"> see proposals you have reviewed </a> or <a href="{% url user_not_reviewed section.section.slug %}"> see proposals you have yet to review </a>)</p>
     {% elif reviewed == 'user_reviewed' %}
     	<h4>Proposals you have reviewed</h4>
+    	<p>(<a href="{% url user_not_reviewed section.section.slug %}"> see proposals you have yet to review </a>)</p>
     {% else %}
-    	<h4>Proposals you have not yet reviewed</h4>
+    	<h4>Proposals you have not yet reviewed</h4> 
+    	<p>(<a href="{% url user_reviewed section.section.slug %}"> see proposals you have reviewed </a>)</p>
     {% endif %}
 
     {% include "reviews/_review_table.html" %}
 {% endblock %}
+
+
+
+                            
