@@ -5,6 +5,12 @@ The ``reviews`` app provides users with appropriate permissions (as defined eith
 
 Reviewers and staff are able to access all reviews, reviews they've submitted, and proposals they have not reviewed by section from within the Reviews pane in the dashboard. Ability to toggle between these options persists on the results page.
 
+Results pages show lists of reviews by section and status (as above), along with current vote tallies for each proposal. Clicking on proposals in this view produces a single-review page, containing review title, author, and summary as well as tabs showing review stats and comments.
+
+These pages also contain a sidebar with links to pages that show cumulative votes per section; review assignments, if any; and result notifications for accepted, rejected, and standby proposals.
+
+For more information on designating and managing reviewers, see the teams.rst doc.
+
 
 Models
 ------
@@ -78,4 +84,8 @@ Includes methods for defining "accepted" status and for promotion of proposals
 
 
 
+Template Tags
+---------------
+
+The ``review_assignments`` tag allows for iteration over user's assignments. 
 
