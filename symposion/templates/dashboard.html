@@ -30,7 +30,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="dashboard-panel-content">
             {% if not user.speaker_profile %}
                 <p>To submit a proposal, you must first <a href="{% url speaker_create %}">create a speaker profile</a>.</p>
@@ -51,7 +51,7 @@
                 {% else %}
                     <p>No proposals submitted yet.</p>
                 {% endif %}
-            
+
                 {% associated_proposals as associated_proposals %}
                 {% if associated_proposals %}
                     <h4>Proposals you have joined as an additional speaker</h4>
@@ -67,7 +67,7 @@
                         {% endfor %}
                     </table>
                 {% endif %}
-                
+
                 {% pending_proposals as pending_proposals %}
                 {% if pending_proposals %}
                     <h4>Proposals you have been invited to join</h4>
@@ -86,7 +86,7 @@
             {% endif %}
         </div>
     </div>
-    
+
     <div class="dashboard-panel">
         <div class="dashboard-panel-header">
             <i class="icon-briefcase"></i>
@@ -99,7 +99,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="dashboard-panel-content">
         {% if not user.is_staff %}
             {% if not user.sponsorships.exists %}
@@ -140,17 +140,17 @@
         {% endif %}
         </div>
     </div>
-        
+
     {% if review_sections %}
         <div class="dashboard-panel">
             <div class="dashboard-panel-header">
                 <i class="icon-briefcase"></i>
                 <h3>{% trans "Reviews" %}</h3>
             </div>
-            
+
             <div class="dashboard-panel-content">
                 <h4>Reviews by Section</h4>
-                
+
                 <ul>
                     {% for section in review_sections %}
                         <h5>{{ section }}</h5>
@@ -159,7 +159,7 @@
                             <li><a href="{% url user_not_reviewed section.section.slug %}">Not Reviewed by you</a></li>
                     {% endfor %}
                 </ul>
-                
+
                 {% comment %}
                 <h4>My Assignments</h4>
                 <table class="table">
@@ -179,11 +179,11 @@
                     </tbody>
                 </table>
                 {% endcomment %}
-                
+
             </div>
     </div>
     {% endif %}
-    
+
     {% available_teams as available_teams %}
     {% if user.memberships.exists or available_teams %}
         <div class="dashboard-panel">
@@ -191,7 +191,7 @@
                 <i class="icon-group"></i>
                 <h3>{% trans "Teams" %}</h3>
             </div>
-            
+
             <div class="dashboard-panel-content">
                 {% if user.memberships.exists %}
                     <h4>Your Teams</h4>
@@ -231,7 +231,11 @@
                         {% endfor %}
                     </table>
                 {% endif %}
+                {% if user.is_staff %}
+                    <p>You may also<a href="{% url team_add %}"> add a new team</a>.</p>
+                {% endif %}
             </div>
         </div>
     {% endif %}
 {% endblock %}
+

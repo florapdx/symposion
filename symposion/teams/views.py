@@ -1,13 +1,15 @@
 from django.http import Http404, HttpResponseNotAllowed
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, render_to_response, redirect, get_object_or_404
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.template import RequestContext
 
 from symposion.utils.mail import send_email
 
-from symposion.teams.forms import TeamInvitationForm
+from symposion.teams.forms import TeamInvitationForm, TeamAddForm
 from symposion.teams.models import Team, Membership
+from symposion.reviews.models import Review, LatestVote
 
 
 ## perm checks
@@ -52,6 +54,24 @@ def can_invite(team, user):
 
 ## views
 
+@login_required
+def team_add(request):
+    if not request.user.is_staff:
+        raise Http404()
+
+    if request.method == "POST":
+        form = TeamAddForm(request.POST, user=request.user)
+        if form.is_valid():
+            team = form.save(commit=False)
+            team.save()
+            return redirect("team_detail", slug=team.slug)
+    else:
+        form = TeamAddForm(user=request.user)
+
+    return render_to_response("teams/team_add.html", {
+        "form": form,
+    }, context_instance=RequestContext(request))
+
 
 @login_required
 def team_detail(request, slug):
@@ -59,7 +79,7 @@ def team_detail(request, slug):
     state = team.get_state_for_user(request.user)
     if team.access == "invitation" and state is None and not request.user.is_staff:
         raise Http404()
-    
+
     if can_invite(team, request.user):
         if request.method == "POST":
             form = TeamInvitationForm(request.POST, team=team)
@@ -72,7 +92,7 @@ def team_detail(request, slug):
             form = TeamInvitationForm(team=team)
     else:
         form = None
-    
+
     return render(request, "teams/team_detail.html", {
         "team": team,
         "state": state,
@@ -89,7 +109,7 @@ def team_join(request, slug):
     state = team.get_state_for_user(request.user)
     if team.access == "invitation" and state is None and not request.user.is_staff:
         raise Http404()
-    
+
     if can_join(team, request.user) and request.method == "POST":
         membership, created = Membership.objects.get_or_create(team=team, user=request.user)
         membership.state = "member"
@@ -106,7 +126,7 @@ def team_leave(request, slug):
     state = team.get_state_for_user(request.user)
     if team.access == "invitation" and state is None and not request.user.is_staff:
         raise Http404()
-    
+
     if can_leave(team, request.user) and request.method == "POST":
         membership = Membership.objects.get(team=team, user=request.user)
         membership.delete()
@@ -122,7 +142,7 @@ def team_apply(request, slug):
     state = team.get_state_for_user(request.user)
     if team.access == "invitation" and state is None and not request.user.is_staff:
         raise Http404()
-    
+
     if can_apply(team, request.user) and request.method == "POST":
         membership, created = Membership.objects.get_or_create(team=team, user=request.user)
         membership.state = "applied"
@@ -137,6 +157,23 @@ def team_apply(request, slug):
     else:
         return redirect("team_detail", slug=slug)
 
+@login_required
+def team_stats(request, pk):
+## Do we want all staff to have access to reviewer stats, or do we just want team managers to have this access?
+    if not request.user.is_staff:
+        raise Http404()
+
+    member = get_object_or_404(Membership, pk=pk)
+    member.reviews = Review.objects.filter(user=member.user)
+    member.total_votes = LatestVote.objects.filter(user=member.user).count()
+
+    ctx = {
+        "member": member.user.email,
+        "reviews": member.reviews,
+        "total_votes" : member.total_votes,
+    }
+
+    return render(request, "teams/team_stats.html", ctx)
 
 @login_required
 def team_promote(request, pk):

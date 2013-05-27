@@ -1,0 +1,44 @@
+{% extends "site_base.html" %}
+
+{% load bootstrap_tags %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Member Stats" %}{% endblock %}
+
+{% block body_class %}teams{% endblock %}
+
+{% block body_outer %}
+    <h2>{{ member }}</h2>
+    <table class="table table-striped table-bordered table-reviews">
+    <thead>
+        <th>#</th>
+        <th>{% trans "Speaker / Title" %}</th>
+        <th>{% trans "Vote" %}</th>
+        <th>{% trans "Comment" %}</th>
+    </thead>
+
+    <tbody>
+        {% for review in reviews %}
+            <tr class="{{ proposal.user_vote_css }}">
+                <td>{{ review.proposal.number }}</td>
+                <td>
+                    <a href="{% url review_detail review.proposal.pk %}">
+                        <small><strong>{{ review.proposal.speaker }}</strong></small>
+                        <br />
+                        {{ review.proposal.title }}
+                    </a>
+                </td>
+                <td>{{ review.vote }}</td>
+                <td>{{ review.comment }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    <th>{% trans "Total Votes" %}</th>
+    <td>{{ total_votes }}</td>
+    <td></td>
+    <td></td>
+</table>
+
+
+
+{% endblock %}

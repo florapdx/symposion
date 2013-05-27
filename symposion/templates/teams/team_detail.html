@@ -14,28 +14,28 @@
                     <input type="submit" class="btn btn-primary" value="join">
                 </form>
             {% endif %}
-            
+
             {% if can_leave %}
                 <form method="post" action="{% url team_leave team.slug %}">
                     {% csrf_token %}
                     <input type="submit" class="btn" value="leave">
                 </form>
             {% endif %}
-            
+
             {% if can_apply %}
-                <form method="post" action="{% url team_apply team.slug %}"> 
+                <form method="post" action="{% url team_apply team.slug %}">
                     {% csrf_token %}
                     <input type="submit" class="btn btn-primary" value="apply">
                 </form>
             {% endif %}
             </div>
-            
+
             <h1>{{ team.name }}{% if state %} <span class="label">{{ state }}</span>{% endif %}</h1>
-            
+
             {% if team.description %}<p>{{ team.description }}</p>{% endif %}
-            
+
             {% if state == "invited" %}<p>You have been invited to join this team. Click <b>join</b> to the right to accept.</p>{% endif %}
-            
+
             {% if user.is_staff or state == "manager" %}
                 {% if team.managers %}
                     <h2>Managers</h2>
@@ -55,7 +55,7 @@
                     <table class="table table-striped">
                         {% for membership in team.members %}
                             <tr>
-                                <td>{{ membership.user.email }}{% if user == membership.user %} <span class="label label-info">you</span>{% endif %}</td>
+                                <td><a href="{% url team_stats membership.pk %}">{{ membership.user.email }}{% if user == membership.user %} <span class="label label-info">you</span>{% endif %}</td></a>
                                 <td>
                                     <form style="margin: 0;" method="post" action="{% url team_promote membership.pk %}">{% csrf_token %}<button type="submit" class="btn btn-mini">promote</button></form>
                                 </td>
