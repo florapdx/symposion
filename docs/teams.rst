@@ -21,6 +21,7 @@ Membership
 Each team member has a user, a team, a state (member, manager, invited, applied, declined, rejected), and a message, which is a private field for associating a message about that particular user-member.
 
 
+
 Views
 ------
 
