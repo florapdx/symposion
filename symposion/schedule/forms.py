@@ -46,6 +46,7 @@ class SlotEditForm(forms.Form):
 class PresentationForm(forms.ModelForm):
 
     class Meta:
+
         model = Presentation
         fields = [
             "title",

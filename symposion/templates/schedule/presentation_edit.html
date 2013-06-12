@@ -13,7 +13,7 @@
     <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
         <legend>{% trans "Edit Presentation" %}</legend>
-        <fieldset>
+        <fieldset class="presentation_editing">
             {{ form|as_bootstrap }}
         </fieldset>
         <div class="form-actions">
