@@ -94,11 +94,6 @@ def export_sponsors(request):
     z = ZipFile(f, "w", ZIP_DEFLATED)
     data = []
 
-    # open the txt file for jsonified sponsor data
-    with open("sponsor_data.txt", "r") as d:
-        data = json.load(d)
-
-
     # collect the data and write web and print logo assets for each sponsor
     for sponsor in Sponsor.objects.all():
         data.append({
@@ -115,14 +110,16 @@ def export_sponsors(request):
             z.write(path, str(sponsor.name)+"_weblogo"+os.path.splitext(path)[1])
         except AttributeError:
             pass
-        if sponsor.print_logo:
+        try:
             print_logo = sponsor.print_logo
             path = print_logo.path
             z.write(path, str(sponsor.name)+"_printlogo"+os.path.splitext(path)[1])
+        except AttributeError:
+            pass
 
     # write sponsor data to text file for zip
-    with open("sponsor_data.txt", "w") as d:
-            json.dump(data, d, encoding="utf-8", indent=4)
+    with open("sponsor_data.txt", "wb") as d:
+       json.dump(data, d, encoding="utf-8", indent=4)
     z.write("sponsor_data.txt")
 
     z.close()
