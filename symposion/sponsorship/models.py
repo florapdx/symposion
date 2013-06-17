@@ -71,20 +71,23 @@ class Sponsor(models.Model):
                 if benefits[0].upload:
                     self.sponsor_logo = benefits[0]
                     self.save()
-        return self.sponsor_logo.upload
+                    return self.sponsor_logo.upload
+        if self.sponsor_logo:
+            return self.sponsor_logo.upload
 
     @property
     def print_logo(self):
         if not hasattr(self, "_print_logo"):
-            self._print_logo = None
             benefits = self.sponsor_benefits.filter(benefit__type="file", upload__isnull=False)[:1]
             if benefits.count():
-                if self._print_logo is file:
-                    self._print_logo = benefits[0].upload
-                    self.save()
-            else:
+                self._print_logo = benefits[0].upload
+                self.save()
+                return self._print_logo
+            if self.website_logo:
                 self._print_logo = self.website_logo
-        return self._print_logo
+                return self._print_logo
+        if hasattr(self, "_print_logo"):
+            return self._print_logo
 
     @property
     def listing_text(self):

@@ -104,18 +104,12 @@ def export_sponsors(request):
             "contact email": sponsor.contact_email,
             "level": str(sponsor.level),
             }),
-        try:
-            logo = sponsor.website_logo
-            path = logo.path
-            z.write(path, str(sponsor.name)+"_weblogo"+os.path.splitext(path)[1])
-        except AttributeError:
-            pass
-        try:
-            print_logo = sponsor.print_logo
-            path = print_logo.path
-            z.write(path, str(sponsor.name)+"_printlogo"+os.path.splitext(path)[1])
-        except AttributeError:
-            pass
+        if sponsor.website_logo:
+            path = sponsor.website_logo.path
+            z.write(path, str(sponsor.name).replace(" ", "")+"_weblogo"+os.path.splitext(path)[1])
+        if sponsor.print_logo:
+            path = sponsor.print_logo.path
+            z.write(path, str(sponsor.name).replace(" ", "")+"_printlogo"+os.path.splitext(path)[1])
 
     # write sponsor data to text file for zip
     with open("sponsor_data.txt", "wb") as d:
