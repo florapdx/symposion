@@ -8,9 +8,11 @@ from django.template import RequestContext
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 from symposion.sponsorship.forms import SponsorApplicationForm, SponsorDetailsForm, SponsorBenefitsFormSet
 from symposion.sponsorship.models import Sponsor, SponsorBenefit
+from symposion.utils.mail import send_email
 
 
 @login_required
@@ -19,6 +21,16 @@ def sponsor_apply(request):
         form = SponsorApplicationForm(request.POST, user=request.user)
         if form.is_valid():
             sponsor = form.save()
+            staff_members = User.objects.filter(is_staff=True)
+            message_ctx = {
+                "sponsor": sponsor,
+            }
+            for staff in staff_members:
+                staff_email = staff.email
+                send_email(
+                    [staff_email], "sponsor_signup",
+                    context = message_ctx
+                )
             return redirect("sponsor_detail", pk=sponsor.pk)
     else:
         form = SponsorApplicationForm(user=request.user)
