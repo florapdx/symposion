@@ -133,11 +133,10 @@
                     </li>
                 {% endfor %}
             </ul>
-                <p>
-                    As staff, you can directly <a href="{% url sponsor_add %}">add a sponsor</a> if the organization isn't
-                    applying themselves.
-                </p>
-                <p>You may also <a href="{% url export_sponsors %}">download</a> a zip file containing sponsor data and assets</p>
+                <p>As staff, you can directly <a href="{% url sponsor_add %}">add a sponsor</a> if the organization isn't
+                    applying themselves.</p>
+                <p>You may also <a href="{% url export_sponsors %}">download</a> a zip file containing sponsor data and assets **we need to make this conditional on eventbrite usage status**, or <a href="{% url sponsor_passes %}">generate free passes</a></p>
+
         {% endif %}
         </div>
     </div>

@@ -2,15 +2,17 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import StringIO #as StringIO
 import os
 import json
+import eventbrite
 from django.http import Http404, HttpResponse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
+from django.conf import settings
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from symposion.sponsorship.forms import SponsorApplicationForm, SponsorDetailsForm, SponsorBenefitsFormSet
+from symposion.sponsorship.forms import SponsorApplicationForm, SponsorDetailsForm, SponsorBenefitsFormSet, SponsorPassesForm
 from symposion.sponsorship.models import Sponsor, SponsorBenefit
 from symposion.utils.mail import send_email
 
@@ -93,6 +95,59 @@ def sponsor_detail(request, pk):
         "form": form,
         "formset": formset,
     }, context_instance=RequestContext(request))
+
+
+@login_required
+def sponsor_passes(request):
+    if not request.user.is_staff:
+        raise Http404()
+
+    # only execute if Eventbrite is being used for this conference
+    if not settings.EVENTBRITE == True:
+        messages.error("We're sorry, Eventbrite isn't being used for this conference.")
+    elif settings.EB_APP_KEY == '' or settings.EB_USER_KEY == '' or settings.EB_EVENT_ID == '':
+        messages.error("Eventbrite client has not been configured properly in settings. Please contact conference organizer about this issue.")
+    else:
+        # get eventbrite credentials from settings
+        eb_event_id = settings.EB_EVENT_ID
+        eb_auth_tokens = {
+            'app_key': settings.EB_APP_KEY,
+            'user_key': settings.EB_USER_KEY
+        }
+        # initiate client with credentials
+        eb_client = eventbrite.EventbriteClient(eb_auth_tokens)
+        response = eb_client.event_get({
+            'id': eb_event_id
+            })
+
+        # go out to eventbrite and grab the ticket choices for this event
+        # make a list of these ticket types to add to our form ChoiceField
+        TICKET_CHOICES = []
+        tickets = response['event']['tickets']
+        for tkt in tickets:
+            ticket = tkt['ticket']
+            TICKET_CHOICES.append((ticket['name'], ticket['name']))
+
+        # make a list of *active* sponsors to add to our form
+        SPONSOR_CHOICES = []
+        for sponsor in Sponsor.objects.filter(active=True):
+            SPONSOR_CHOICES.append((sponsor, sponsor))
+
+
+        if request.method == "POST":
+            form = SponsorPassesForm(request.POST, tickets=TICKET_CHOICES, sponsors=SPONSOR_CHOICES)
+            if form.is_valid():
+                # sponsor = form.cleaned_data["sponsor"]
+                # generate eventbrite request
+                # grab data; parse for display
+                # send auto-email to sponsor contact
+                return redirect("dashboard")
+        else:
+            form = SponsorPassesForm(sponsors=SPONSOR_CHOICES, tickets=TICKET_CHOICES)
+
+        return render_to_response("sponsorship/passes.html", {
+            "form": form,
+        }, context_instance=RequestContext(request))
 
 
 # with print logos and json reformat
