@@ -114,19 +114,29 @@ def sponsor_passes(request):
             'app_key': settings.EB_APP_KEY,
             'user_key': settings.EB_USER_KEY
         }
-        # initiate client with credentials
+        # initiate client with credentials and grab event data
         eb_client = eventbrite.EventbriteClient(eb_auth_tokens)
         response = eb_client.event_get({
             'id': eb_event_id
             })
 
-        # go out to eventbrite and grab the ticket choices for this event
-        # make a list of these ticket types to add to our form ChoiceField
+        # We'll need the event name and url for our email
+        event_title = response['event']['title']
+        event_url = response['event']['url']
+
+        # get ticket choices for this event and make list for form display
         TICKET_CHOICES = []
         tickets = response['event']['tickets']
         for tkt in tickets:
             ticket = tkt['ticket']
-            TICKET_CHOICES.append((ticket['name'], ticket['name']))
+            try:
+                price = ticket['price']
+            except KeyError:
+                price = '0'
+
+        # Don't include tickets of type 'donation' (== 1; fixed-price tickets are type 0)
+            if ticket['type'] != 1:
+                TICKET_CHOICES.append(((ticket['name'], price), ticket['name'] + ' -- $' + price))
 
         # make a list of *active* sponsors to add to our form
         SPONSOR_CHOICES = []
@@ -137,10 +147,47 @@ def sponsor_passes(request):
         if request.method == "POST":
             form = SponsorPassesForm(request.POST, tickets=TICKET_CHOICES, sponsors=SPONSOR_CHOICES)
             if form.is_valid():
-                # sponsor = form.cleaned_data["sponsor"]
-                # generate eventbrite request
-                # grab data; parse for display
+                sponsor = form.cleaned_data["sponsor"]
+                ticket_type_id = 0
+                discount_code = str(sponsor[:5] + '_' + ticket[:5])
+
+                # grab the list of existing discounts to check against
+                response = eb_client.event_list_discounts({
+                    'id': eb_event_id
+                    })
+
+                # Alert user if discount already exists, and reset form
+                for discount in response['discounts']:
+                    if discount['code'] == discount_code:
+                        messages.error(response, "Oops, looks like that discount already exists")
+                        return redirect('')
+                    else:
+                        # generate eventbrite request
+                        response = eb_client.discount_new({
+                            'event_id': eb_event_id,
+                            'code': discount_code,
+                            'amount_off': int(form.cleaned_data["amount_off"]),
+                            'quantity_available': int(form.cleaned_data["number_of_passes"]),
+                            'tickets': ticket_type_id,
+                        })
+
                 # send auto-email to sponsor contact
+                    for sponsor in Sponsor.objects.filter(name = sponsor):
+                        contact_name = sponsor.contact_name
+                        contact_email = sponsor.contact_email
+
+                    message_ctx = {
+                        "event_name": event_title,
+                        "sponsor": sponsor,
+                        "contact_name": contact_name,
+                        "discount_code": discount_code,
+                        "event_url": event_url,
+                    }
+                    send_email(
+                    [contact_email], "sponsor_passes",
+                    context = message_ctx
+                )
+
                 return redirect("dashboard")
         else:
             form = SponsorPassesForm(sponsors=SPONSOR_CHOICES, tickets=TICKET_CHOICES)

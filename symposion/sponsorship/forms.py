@@ -95,11 +95,11 @@ class SponsorPassesForm(forms.Form):
         self.tickets = kwargs.pop("tickets")
         self.sponsors = kwargs.pop("sponsors")
         super(SponsorPassesForm, self).__init__(*args, **kwargs)
-        self.fields["ticket_type"] = forms.ChoiceField(choices = self.tickets)
+        self.fields["ticket_name"] = forms.ChoiceField(choices = self.tickets)
         self.fields["sponsor"] = forms.ChoiceField(choices = self.sponsors)
 
     number_of_passes = forms.IntegerField()
-    percent_off = forms.IntegerField(max_value = 100)
+    amount_off = forms.IntegerField(max_value = 100)
 
 
 
