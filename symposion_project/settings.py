@@ -25,9 +25,9 @@ MANAGERS = ADMINS
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3", # Add "postgresql_psycopg2", "postgresql", "mysql", "sqlite3" or "oracle".
-        "NAME": "dev.db",                       # Or path to database file if using sqlite3.
-        "USER": "",                             # Not used with sqlite3.
+        "ENGINE": "django.db.backends.postgresql_psycopg2", # Add "postgresql_psycopg2", "postgresql", "mysql", "sqlite3" or "oracle".
+        "NAME": "testpg",                       # Or path to database file if using sqlite3.
+        "USER": "fwpdx",                             # Not used with sqlite3.
         "PASSWORD": "",                         # Not used with sqlite3.
         "HOST": "",                             # Set to empty string for localhost. Not used with sqlite3.
         "PORT": "",                             # Set to empty string for default. Not used with sqlite3.
@@ -133,11 +133,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
-    
+
     # theme
     "pinax_theme_bootstrap",
     "django_forms_bootstrap",
-    
+
     # external
     "debug_toolbar",
     "mailer",
@@ -149,7 +149,7 @@ INSTALLED_APPS = [
     "easy_thumbnails",
     "sitetree",
     "account",
-    
+
     # symposion
     "symposion",
     "symposion.sponsorship",
@@ -161,7 +161,7 @@ INSTALLED_APPS = [
     "symposion.teams",
     "symposion.reviews",
     "symposion.schedule",
-    
+
     # project
     "symposion_project.proposals",
 ]
@@ -172,7 +172,10 @@ FIXTURE_DIRS = [
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
-EMAIL_BACKEND = "mailer.backend.DbBackend"
+#EMAIL_BACKEND = "mailer.backend.DbBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
 
 ACCOUNT_OPEN_SIGNUP = True
 ACCOUNT_USE_OPENID = False
@@ -189,7 +192,7 @@ ACCOUNT_USER_DISPLAY = lambda user: user.email
 AUTHENTICATION_BACKENDS = [
     # Permissions Backends
     "symposion.teams.backends.TeamPermissionsBackend",
-    
+
     # Auth backends
     "account.auth_backends.EmailAuthenticationBackend",
 ]
@@ -216,6 +219,19 @@ PROPOSAL_FORMS = {
     "talk": "symposion_project.proposals.forms.TalkProposalForm",
     "poster": "symposion_project.proposals.forms.PosterProposalForm",
 }
+
+# Eventbrite credentials
+# Event_id needs to be configured per event//find the ID on eventbrite
+# Generate/copy keys from Eventbrite account
+## DON'T PUSH KEYS TO PUBLIC REPOS!!!
+EVENTBRITE = True
+EB_EVENT_ID = ''
+EB_APP_KEY = ''
+EB_USER_KEY = ''
+
+# Contact info for current event; for email templates
+EVENT_EMAIL = '' # eg, info@djangocon.us
+EVENT_PHONE = '' # eg, our contact phone
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.

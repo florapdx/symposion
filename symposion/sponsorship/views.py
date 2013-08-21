@@ -102,91 +102,132 @@ def sponsor_passes(request):
     if not request.user.is_staff:
         raise Http404()
 
-    # only execute if Eventbrite is being used for this conference
+    # Turn back if eventbrite not being used or if config data missing from settings
     if not settings.EVENTBRITE == True:
-        messages.error("We're sorry, Eventbrite isn't being used for this conference.")
+        messages.error(request, "We're sorry, Eventbrite isn't being used for this conference.")
+        return redirect('dashboard')
     elif settings.EB_APP_KEY == '' or settings.EB_USER_KEY == '' or settings.EB_EVENT_ID == '':
-        messages.error("Eventbrite client has not been configured properly in settings. Please contact conference organizer about this issue.")
+        messages.error(request, "Eventbrite client has not been configured properly in settings. Please contact conference organizer about this issue.")
+        return redirect('dashboard')
     else:
-        # get eventbrite credentials from settings
+        # grab authentication credentials
         eb_event_id = settings.EB_EVENT_ID
         eb_auth_tokens = {
             'app_key': settings.EB_APP_KEY,
             'user_key': settings.EB_USER_KEY
         }
-        # initiate client with credentials and grab event data
+
+        # Make first request for basic event and ticket info
         eb_client = eventbrite.EventbriteClient(eb_auth_tokens)
         response = eb_client.event_get({
             'id': eb_event_id
             })
 
-        # We'll need the event name and url for our email
-        event_title = response['event']['title']
-        event_url = response['event']['url']
-
-        # get ticket choices for this event and make list for form display
+        # Make choices list of ticket names and prices for our form
         TICKET_CHOICES = []
+        ticket_dict = {}
         tickets = response['event']['tickets']
         for tkt in tickets:
             ticket = tkt['ticket']
-            try:
-                price = ticket['price']
-            except KeyError:
-                price = '0'
-
-        # Don't include tickets of type 'donation' (== 1; fixed-price tickets are type 0)
+            # don't include donation ('type' == 1) tickets
             if ticket['type'] != 1:
-                TICKET_CHOICES.append(((ticket['name'], price), ticket['name'] + ' -- $' + price))
+                ticket_name = ticket['name']
+                ticket_id = ticket['id']
+                price = ticket['price']
 
-        # make a list of *active* sponsors to add to our form
+            # Make dict of name/id pairs for discount generation
+                ticket_dict[ticket_name] = ticket_id
+
+            # Make our choices list for form
+                TICKET_CHOICES.append(( ticket_name, ticket_name + ' -- $' + price ))
+
+        # Next, make a list of *active* sponsors to add to our form
         SPONSOR_CHOICES = []
         for sponsor in Sponsor.objects.filter(active=True):
             SPONSOR_CHOICES.append((sponsor, sponsor))
 
+        # we also need event title and url for our email
+        event_title = response['event']['title']
+        event_url = response['event']['url']
 
+
+        # If form is valid, process form and generate discount
         if request.method == "POST":
             form = SponsorPassesForm(request.POST, tickets=TICKET_CHOICES, sponsors=SPONSOR_CHOICES)
             if form.is_valid():
                 sponsor = form.cleaned_data["sponsor"]
-                ticket_type_id = 0
-                discount_code = str(sponsor[:5] + '_' + ticket[:5])
+                ticket_names = form.cleaned_data["ticket_names"]
+                amount_off = form.cleaned_data["amount_off"]
+                percent_off = form.cleaned_data["percent_off"]
 
-                # grab the list of existing discounts to check against
-                response = eb_client.event_list_discounts({
-                    'id': eb_event_id
+                # match selected ticket types to ticket ids from our dict
+                ## This could be better...
+                tickets_list = ''
+                for k, v in ticket_dict.iteritems():
+                    if k in ticket_names:
+                        tickets_list += str(v) + ','
+                tickets_list = tickets_list.rstrip(',')
+
+                # Eventbrite will only accept one of the following: amount_off or percent_off
+                # Create variables to pass into our request one or other depending on staff input
+                if amount_off != None and percent_off == None:
+                    discount_n = 'amount_off'
+                    discount_v = amount_off
+                elif percent_off != None and amount_off == None:
+                    discount_n = 'percent_off'
+                    discount_v = percent_off
+
+                # Generate discount code
+                discount_code = (sponsor[:6] + '_' + event_title[:6]).replace(' ', '')
+
+                # Alert user if discount already exists
+                # Except case where no discounts exist to check against
+                try:
+                    response = eb_client.event_list_discounts({
+                        'id': eb_event_id
                     })
+                    for dsct in response['discounts']:
+                        discount = dsct['discount']
+                        if discount['code'] == discount_code:
+                            messages.error(request, "Oops, looks like that discount already exists")
+                            return redirect("sponsor_passes")
 
-                # Alert user if discount already exists, and reset form
-                for discount in response['discounts']:
-                    if discount['code'] == discount_code:
-                        messages.error(response, "Oops, looks like that discount already exists")
-                        return redirect('')
-                    else:
-                        # generate eventbrite request
-                        response = eb_client.discount_new({
-                            'event_id': eb_event_id,
-                            'code': discount_code,
-                            'amount_off': int(form.cleaned_data["amount_off"]),
-                            'quantity_available': int(form.cleaned_data["number_of_passes"]),
-                            'tickets': ticket_type_id,
-                        })
+                except EnvironmentError:
+                    response = ''
+                    pass
 
-                # send auto-email to sponsor contact
-                    for sponsor in Sponsor.objects.filter(name = sponsor):
-                        contact_name = sponsor.contact_name
-                        contact_email = sponsor.contact_email
+                # Send request to eventbrite to register the discount code w/params
+                response = eb_client.discount_new({
+                    'event_id': eb_event_id,
+                    'code': discount_code,
+                    discount_n : discount_v,
+                    'quantity_available': int(form.cleaned_data["number_of_passes"]),
+                    'tickets': tickets_list
+                })
 
-                    message_ctx = {
-                        "event_name": event_title,
-                        "sponsor": sponsor,
-                        "contact_name": contact_name,
-                        "discount_code": discount_code,
-                        "event_url": event_url,
-                    }
-                    send_email(
+                # Auto-email to sponsor contact with discount code
+                for spsr in Sponsor.objects.filter(name = sponsor):
+                    contact_name = spsr.contact_name
+                    contact_email = spsr.contact_email
+
+                event_email = settings.EVENT_EMAIL
+                event_phone = settings.EVENT_PHONE
+
+                message_ctx = {
+                    "event_name": event_title,
+                    "sponsor": sponsor,
+                    "contact_name": contact_name,
+                    "discount_code": discount_code,
+                    "event_url": event_url,
+                    "event_contact_email": event_email,
+                    "event_contact_phone": event_phone
+                }
+                send_email(
                     [contact_email], "sponsor_passes",
                     context = message_ctx
                 )
+
+                messages.success(request, "Discount code was generated and has been emailed to sponsor contact")
 
                 return redirect("dashboard")
         else:

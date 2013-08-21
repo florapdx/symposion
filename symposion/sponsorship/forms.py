@@ -95,15 +95,21 @@ class SponsorPassesForm(forms.Form):
         self.tickets = kwargs.pop("tickets")
         self.sponsors = kwargs.pop("sponsors")
         super(SponsorPassesForm, self).__init__(*args, **kwargs)
-        self.fields["ticket_name"] = forms.ChoiceField(choices = self.tickets)
+        self.fields["ticket_names"] = forms.MultipleChoiceField(choices = self.tickets)
         self.fields["sponsor"] = forms.ChoiceField(choices = self.sponsors)
 
     number_of_passes = forms.IntegerField()
-    amount_off = forms.IntegerField(max_value = 100)
+    amount_off = forms.FloatField(required=False)
+    percent_off = forms.IntegerField(max_value=100, required=False)
 
+    def clean(self):
+        amount_off = self.cleaned_data['amount_off']
+        percent_off = self.cleaned_data['percent_off']
+        if amount_off and percent_off:
+            raise forms.ValidationError('Please enter in either amount OR percent off')
+        elif amount_off == None and percent_off == None:
+            raise forms.ValidationError('Please provide either an amount OR percent off')
 
-
-
-
+        return self.cleaned_data
 
 
