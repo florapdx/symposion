@@ -8,4 +8,5 @@ urlpatterns = patterns("symposion.sponsorship.views",
     url(r"^apply/$", "sponsor_apply", name="sponsor_apply"),
     url(r"^add/$", "sponsor_add", name="sponsor_add"),
     url(r"^(?P<pk>\d+)/$", "sponsor_detail", name="sponsor_detail"),
+    url(r"^passes/$", "sponsor_passes", name="sponsor_passes"),
 )
