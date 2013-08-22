@@ -99,6 +99,7 @@ class Sponsor(models.Model):
                 self._listing_text = benefits[0].text
         return self._listing_text
 
+
     def reset_benefits(self):
         """
         Reset all benefits for this sponsor to the defaults for their

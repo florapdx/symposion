@@ -24,7 +24,7 @@ class SponsorBenefitInline(admin.StackedInline):
 
 
 class SponsorAdmin(admin.ModelAdmin):
-    
+
     save_on_top = True
     fieldsets = [
         (None, {
@@ -43,7 +43,7 @@ class SponsorAdmin(admin.ModelAdmin):
     ]
     inlines = [SponsorBenefitInline]
     list_display = ["name", "external_url", "level", "active"]
-    
+
     def get_form(self, *args, **kwargs):
         # @@@ kinda ugly but using choices= on NullBooleanField is broken
         form = super(SponsorAdmin, self).get_form(*args, **kwargs)
@@ -56,13 +56,13 @@ class SponsorAdmin(admin.ModelAdmin):
 
 
 class BenefitAdmin(admin.ModelAdmin):
-    
+
     list_display = ["name", "type", "description"]
     inlines = [BenefitLevelInline]
 
 
 class SponsorLevelAdmin(admin.ModelAdmin):
-    
+
     inlines = [BenefitLevelInline]
 
 
