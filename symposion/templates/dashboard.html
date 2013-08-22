@@ -133,10 +133,10 @@
                     </li>
                 {% endfor %}
             </ul>
-                <p>
-                    As staff, you can directly <a href="{% url sponsor_add %}">add a sponsor</a> if the organization isn't
-                    applying themselves.
-                </p>
+                <p>As staff, you can <a href="{% url sponsor_add %}">add a sponsor</a> directly if the organization isn't
+                    applying themselves.</p>
+                <p>You may also <a href="{% url export_sponsors %}">download a zip file</a> containing sponsor data and assets, or <a href="{% url sponsor_passes %}">generate free passes</a> if using Eventbrite for ticketing.</p>
+
         {% endif %}
         </div>
     </div>
@@ -151,14 +151,14 @@
             <div class="dashboard-panel-content">
                 <h4>Reviews by Section</h4>
 
-                <ul>
                     {% for section in review_sections %}
                         <h5>{{ section }}</h5>
+                        <ul>
                             <li><a href="{% url review_section section.section.slug %}">All</a></li>
                             <li><a href="{% url user_reviewed section.section.slug %}">Reviewed by you</a></li>
                             <li><a href="{% url user_not_reviewed section.section.slug %}">Not Reviewed by you</a></li>
+                        </ul>
                     {% endfor %}
-                </ul>
 
                 {% comment %}
                 <h4>My Assignments</h4>
