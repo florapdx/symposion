@@ -161,12 +161,8 @@ def sponsor_passes(request):
                 percent_off = form.cleaned_data["percent_off"]
 
                 # match selected ticket types to ticket ids from our dict
-                ## This could be better...
-                tickets_list = ''
-                for k, v in ticket_dict.iteritems():
-                    if k in ticket_names:
-                        tickets_list += str(v) + ','
-                tickets_list = tickets_list.rstrip(',')
+                tickets_list = ','.join(str(v) for k, v in ticket_dict.iteritems() if k in ticket_names)
+
 
                 # Eventbrite will only accept one of the following: amount_off or percent_off
                 # Create variables to pass into our request one or other depending on staff input
@@ -189,7 +185,7 @@ def sponsor_passes(request):
                     for dsct in response['discounts']:
                         discount = dsct['discount']
                         if discount['code'] == discount_code:
-                            messages.error(request, "Oops, looks like that discount already exists")
+                            messages.error(request, "Oops, looks like that discount code already exists")
                             return redirect("sponsor_passes")
 
                 except EnvironmentError:
