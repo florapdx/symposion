@@ -26,8 +26,8 @@ MANAGERS = ADMINS
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2", # Add "postgresql_psycopg2", "postgresql", "mysql", "sqlite3" or "oracle".
-        "NAME": "dev.db",                       # Or path to database file if using sqlite3.
-        "USER": "",                             # Not used with sqlite3.
+        "NAME": "testpg",                       # Or path to database file if using sqlite3.
+        "USER": "fwpdx",                             # Not used with sqlite3.
         "PASSWORD": "",                         # Not used with sqlite3.
         "HOST": "",                             # Set to empty string for localhost. Not used with sqlite3.
         "PORT": "",                             # Set to empty string for default. Not used with sqlite3.
@@ -172,11 +172,11 @@ FIXTURE_DIRS = [
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
-EMAIL_BACKEND = "mailer.backend.DbBackend"
+#EMAIL_BACKEND = "mailer.backend.DbBackend"
 ## Uncomment following to enable email testing locally
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = "localhost"
-#EMAIL_PORT = 1025
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
 
 ACCOUNT_OPEN_SIGNUP = True
 ACCOUNT_USE_OPENID = False
@@ -226,13 +226,13 @@ PROPOSAL_FORMS = {
 # Generate/copy keys from Eventbrite account
 ## DON'T PUSH KEYS TO PUBLIC REPOS!!!
 EVENTBRITE = True
-EB_EVENT_ID = ''
-EB_APP_KEY = ''
-EB_USER_KEY = ''
+EB_EVENT_ID = '7936515331'
+EB_APP_KEY = 'BDNCIMG5VJI3CHCGTR'
+EB_USER_KEY = '137684888269863245849'
 
 # Contact info for current event; for email templates
-EVENT_EMAIL = '' # eg, info@djangocon.us
-EVENT_PHONE = '' # eg, our contact phone
+EVENT_EMAIL = 'flora@theopenbastion.com' # eg, info@djangocon.us
+EVENT_PHONE = '800-494-3119' # eg, our contact phone
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.

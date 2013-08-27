@@ -5335,10 +5335,6 @@ div.box-content .markItUpEditor {
 .reviews-list-header {
   display: inline-block;
 }
-.reviews-toggle {
-  display: inline-block; /*display reviews links inline with headers on reviews_list.html*/
-  margin-left: 20px;
-}
 table.calendar {
   background-color: #fffff;
   table-layout: fixed;

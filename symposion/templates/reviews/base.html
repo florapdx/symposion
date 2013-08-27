@@ -64,6 +64,14 @@
                                 {% trans "All Proposals" %}
                             </a>
                         </li>
+                        <li>
+                            <a href="{% url user_reviewed section.section.slug %}">
+                                {% trans "Reviewed" %}
+                        </li>
+                        <li>
+                            <a href="{% url user_not_reviewed section.section.slug %}">
+                                {% trans "Not Reviewed" %}
+                        </li>
                         {% comment %}
                         <li>
                             <a href="{% url review_section_assignments section.section.slug %}">
