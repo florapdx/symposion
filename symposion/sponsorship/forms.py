@@ -26,6 +26,10 @@ class SponsorApplicationForm(forms.ModelForm):
             "external_url",
             "contact_name",
             "contact_email",
+            "invoice_name",
+            "invoice_email",
+            "graphics_name",
+            "graphics_email",
             "level",
             "active"
         ]
@@ -43,6 +47,10 @@ class SponsorDetailsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super(SponsorDetailsForm, self).__init__(*args, **kwargs)
+        self.fields["invoice_name"].required=False
+        self.fields["invoice_email"].required=False
+        self.fields["graphics_name"].required=False
+        self.fields["graphics_email"].required=False
         if not self.user.is_staff:
             del self.fields["active"]
 
@@ -53,6 +61,10 @@ class SponsorDetailsForm(forms.ModelForm):
             "external_url",
             "contact_name",
             "contact_email",
+            "invoice_name",
+            "invoice_email",
+            "graphics_name",
+            "graphics_email",
             "active"
         ]
 

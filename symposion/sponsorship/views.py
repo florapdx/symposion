@@ -23,10 +23,10 @@ def sponsor_apply(request):
         form = SponsorApplicationForm(request.POST, user=request.user)
         if form.is_valid():
             sponsor = form.save()
-            staff_members = User.objects.filter(is_staff=True)
             message_ctx = {
                 "sponsor": sponsor,
             }
+            staff_members = User.objects.filter(is_staff=True)
             for staff in staff_members:
                 staff_email = staff.email
                 send_email(
@@ -65,9 +65,12 @@ def sponsor_add(request):
 def sponsor_detail(request, pk):
     sponsor = get_object_or_404(Sponsor, pk=pk)
 
-    if not request.user.is_staff:
-        if sponsor.applicant != request.user:
-            return redirect("sponsor_list")
+    if not request.user.is_staff and request.user.email not in sponsor.sponsor_contacts:
+        return redirect("sponsor_list")
+
+    if not sponsor in Sponsor.objects.filter(active=True) and not request.user.is_staff:
+        messages.error(request, "Your membership is pending approval. You'll hear from us soon.")
+        return redirect("dashboard")
 
     formset_kwargs = {
         "instance": sponsor,
@@ -77,24 +80,33 @@ def sponsor_detail(request, pk):
     if request.method == "POST":
 
         form = SponsorDetailsForm(request.POST, user=request.user, instance=sponsor)
-        formset = SponsorBenefitsFormSet(request.POST, request.FILES, **formset_kwargs)
+        formset = None
 
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             form.save()
-            formset.save()
-
             messages.success(request, "Sponsorship details have been updated")
+            return redirect("sponsor_detail", pk=sponsor.pk)
 
-            return redirect("dashboard")
+        if sponsor in Sponsor.objects.filter(active=True):
+            formset = SponsorBenefitsFormSet(request.POST, request.FILES, **formset_kwargs)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, "Sponsorship benefits have been updated")
+                return redirect("sponsor_detail", pk=sponsor.pk)
+
     else:
         form = SponsorDetailsForm(user=request.user, instance=sponsor)
         formset = SponsorBenefitsFormSet(**formset_kwargs)
+
+    benefits = [b.benefit for b in sponsor.sponsor_benefits.all()]
 
     return render_to_response("sponsorship/detail.html", {
         "sponsor": sponsor,
         "form": form,
         "formset": formset,
+        "benefits": benefits,
     }, context_instance=RequestContext(request))
+
 
 
 @login_required

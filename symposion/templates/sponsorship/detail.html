@@ -1,6 +1,7 @@
 {% extends "site_base.html" %}
 
 {% load bootstrap_tags %}
+{% load thumbnail %}
 {% load i18n %}
 
 {% block head_title %}{{ sponsor }}{% endblock %}
@@ -8,14 +9,45 @@
 {% block page_title %}{% trans "Sponsorship" %}{% endblock %}
 
 {% block body %}
-    <h2>{{ sponsor.name }} ({{ sponsor.level }})</h2>
+    <h2>{{ sponsor.name }} {% if sponsor.level %}({{ sponsor.level }}){% endif %}</h2>
 
-    <form enctype="multipart/form-data" method="POST" action="" class="form-horizontal">
+    <div class="sponsor_details">
+        <div><h3 class="sponsor_hdr">Sponsor Details</h3><a id="edit_link" href"">Edit Details</a></div>
+        <div><label class="control-label">External URL: </label><span class = "sponsor-detail"> {{ sponsor.external_url }}</span></div>
+        <div><label class="control-label">Primary Contact: </label><span class = "sponsor-detail"> {{ sponsor.contact_name}}, {{sponsor.contact_email }}</span></div>
+        <div><label class="control-label">Invoice Contact: </label><span class = "sponsor-detail"> {{ sponsor.invoice_name}}, {{sponsor.invoice_email }}</span></div>
+        <div><label class="control-label">Graphics Contact: </label><span class = "sponsor-detail"> {{ sponsor.graphics_name}}, {{sponsor.graphics_email }}</span></div>
+    </div>
+
+    <form enctype="multipart/form-data" method="POST" action="" class="form-horizontal edit_details">
         {% csrf_token %}
+        <h3>Sponsor Details</h3>
         <fieldset>
             {{ form|as_bootstrap }}
         </fieldset>
+        <div class="form-actions">
+            <input class="btn btn-primary" type="submit" value="Save" />
+            <a class="btn cancel_details" href="#">Cancel</a>
+        </div>
+    </form>
 
+    <div class="sponsor_benefit_details">
+        <div><h3 class="sponsor_hdr">Benefit Details</h3><a id="edit_benefits_link" href"">Edit Benefits</a></div>
+        {% for benefit in benefits %}
+            {% if benefit.name == "Web Logo" %}
+                <div><label class="control-label">{{ benefit }}</label><img src="{% thumbnail sponsor.website_logo '150x80' %}" alt="{{ sponsor.website_logo }}" /></div>
+            {% elif benefit.name == "Print Logo" %}
+                <div><label class="control-label">{{ benefit }}</label><img src="{% thumbnail sponsor.print_logo '150x80' %}" alt="{{ sponsor.print_logo }}" /></div>
+            {% elif benefit.name == "Sponsor Description" %}
+                <div><label class="control-label">{{ benefit }}</label><div style="margin:20px;">{{ sponsor.listing_text }}</div></div>
+            {% else %}
+                <div><label class="control-label">{{ benefit }}</label></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <form enctype="multipart/form-data" method="POST" action="" class="form-horizontal edit_benefits">
+        {% csrf_token %}
         <h3>{{ sponsor.level }} Sponsor Benefits</h3>
 
         {{ formset.management_form }}
@@ -33,8 +65,30 @@
 
         <div class="form-actions">
             <input class="btn btn-primary" type="submit" value="Save" />
-            <a class="btn" href="{% url dashboard %}">Cancel</a>
+            <a class="btn cancel_benefits" href="#">Cancel</a>
         </div>
-
     </form>
+
+{% endblock %}
+{% block extra_script %}
+    <script type="text/javascript">
+        $(function() {
+            $(".edit_details").hide();
+            $(".edit_benefits").hide();
+            $("#edit_link").on('click', function () {
+                $(".edit_details").toggle();
+                return false;
+            });
+            $(".cancel_details").on('click', function () {
+                $(".edit_details").hide();
+            })
+            $("#edit_benefits_link").on('click', function () {
+                $(".edit_benefits").toggle();
+                return false;
+            });
+            $(".cancel_benefits").on('click', function () {
+                $(".edit_benefits").hide();
+            });
+        });
+    </script>
 {% endblock %}

@@ -40,8 +40,12 @@ class Sponsor(models.Model):
     name = models.CharField(_("Sponsor Name"), max_length=100)
     external_url = models.URLField(_("external URL"))
     annotation = models.TextField(_("annotation"), blank=True)
-    contact_name = models.CharField(_("Contact Name"), max_length=100)
-    contact_email = models.EmailField(_(u"Contact Email"))
+    contact_name = models.CharField(_("Primary Contact Name"), max_length=100)
+    contact_email = models.EmailField(_(u"Primary Contact Email"))
+    invoice_name = models.CharField(_("Invoice Contact Name"), max_length=100)
+    invoice_email = models.EmailField(_(u"Invoice Contact Email"))
+    graphics_name = models.CharField(_("Graphics Contact Name"), max_length=100)
+    graphics_email = models.EmailField(_(u"Graphics Contact Email"))
     level = models.ForeignKey(SponsorLevel, verbose_name=_("level"))
     added = models.DateTimeField(_("added"), default=datetime.datetime.now)
     active = models.BooleanField(_("active"), default=False)
@@ -62,6 +66,13 @@ class Sponsor(models.Model):
         if self.active:
             return reverse("sponsor_detail", kwargs={"pk": self.pk})
         return reverse("sponsor_list")
+
+# Adding a list of contacts so we can control exposure of sponsor forms // make sure all contacts can edit info
+    @property
+    def sponsor_contacts(self):
+        if not hasattr(self, "_sponsor_contacts"):
+            self._sponsor_contacts = [self.contact_email, self.invoice_email, self.graphics_email]
+            return self._sponsor_contacts
 
     @property
     def website_logo(self):
