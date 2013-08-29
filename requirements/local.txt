@@ -1,0 +1,8 @@
+# This file contains any distributions we need for local development only
+# Should very closely resemble test.txt
+
+-r base.txt
+
+coverage==3.6
+django-discover-runner==1.0
+

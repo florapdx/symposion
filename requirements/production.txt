@@ -1,0 +1,5 @@
+# This should be the same as our base.txt file, except optional addition of gunicorn
+
+-r base.txt
+
+gunicorn==0.17.4

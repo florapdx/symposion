@@ -4,8 +4,9 @@
 import os.path
 import posixpath
 
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
+PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))  #os.path.join(PROJECT_ROOT, "symposion")
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -106,6 +107,7 @@ MIDDLEWARE_CLASSES = [
 ROOT_URLCONF = "symposion_project.urls"
 
 TEMPLATE_DIRS = [
+    os.path.join(PROJECT_ROOT, "templates"),
     os.path.join(PACKAGE_ROOT, "templates"),
 ]
 
@@ -236,7 +238,7 @@ EVENT_PHONE = '800-494-3119' # eg, our contact phone
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
-try:
-    from local_settings import *
-except ImportError:
-    pass
+#try:
+#    from local_settings import *
+#except ImportError:
+#    pass
