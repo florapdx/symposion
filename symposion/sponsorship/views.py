@@ -1,3 +1,4 @@
+from collections import Counter, defaultdict
 from zipfile import ZipFile, ZIP_DEFLATED
 import StringIO #as StringIO
 import os
@@ -13,14 +14,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from symposion.sponsorship.forms import SponsorApplicationForm, SponsorDetailsForm, SponsorBenefitsFormSet, SponsorPassesForm
-from symposion.sponsorship.models import Sponsor, SponsorBenefit
+from symposion.sponsorship.models import Sponsor, BenefitLevel, SponsorBenefit, SponsorLevel
 from symposion.utils.mail import send_email
 
 
 @login_required
 def sponsor_apply(request):
+
+    CHOICES = []
+    for s in SponsorLevel.objects.all():
+        CHOICES.append(( s, s.name + ': ' + ', '.join([b.benefit.name for b in BenefitLevel.objects.filter(level = s)]) ))
+
     if request.method == "POST":
-        form = SponsorApplicationForm(request.POST, user=request.user)
+        form = SponsorApplicationForm(request.POST, user=request.user, choices=CHOICES)
         if form.is_valid():
             sponsor = form.save()
             message_ctx = {
@@ -35,7 +41,7 @@ def sponsor_apply(request):
                 )
             return redirect("sponsor_detail", pk=sponsor.pk)
     else:
-        form = SponsorApplicationForm(user=request.user)
+        form = SponsorApplicationForm(user=request.user, choices=CHOICES)
 
     return render_to_response("sponsorship/apply.html", {
         "form": form,
@@ -47,18 +53,24 @@ def sponsor_add(request):
     if not request.user.is_staff:
         raise Http404()
 
+    CHOICES = []
+    for s in SponsorLevel.objects.all():
+        CHOICES.append(( s, s.name + ': ' + ', '.join([b.benefit.name for b in BenefitLevel.objects.filter(level = s)]) ))
+
     if request.method == "POST":
-        form = SponsorApplicationForm(request.POST, user=request.user)
+        form = SponsorApplicationForm(request.POST, user=request.user, choices=CHOICES)
+
         if form.is_valid():
             sponsor = form.save(commit=False)
             sponsor.save()
             return redirect("sponsor_detail", pk=sponsor.pk)
     else:
-        form = SponsorApplicationForm(user=request.user)
+        form = SponsorApplicationForm(user=request.user, choices=CHOICES)
 
     return render_to_response("sponsorship/add.html", {
         "form": form,
     }, context_instance=RequestContext(request))
+
 
 
 @login_required
@@ -69,7 +81,7 @@ def sponsor_detail(request, pk):
         return redirect("sponsor_list")
 
     if not sponsor in Sponsor.objects.filter(active=True) and not request.user.is_staff:
-        messages.error(request, "Your membership is pending approval. You'll hear from us soon.")
+        messages.warning(request, "Thank you for your interest. Your sponsorship is pending approval. We'll be in touch soon.")
         return redirect("dashboard")
 
     formset_kwargs = {
@@ -166,6 +178,7 @@ def sponsor_passes(request):
         # If form is valid, process form and generate discount
         if request.method == "POST":
             form = SponsorPassesForm(request.POST, tickets=TICKET_CHOICES, sponsors=SPONSOR_CHOICES)
+
             if form.is_valid():
                 sponsor = form.cleaned_data["sponsor"]
                 ticket_names = form.cleaned_data["ticket_names"]

@@ -49,6 +49,7 @@ class Sponsor(models.Model):
     level = models.ForeignKey(SponsorLevel, verbose_name=_("level"))
     added = models.DateTimeField(_("added"), default=datetime.datetime.now)
     active = models.BooleanField(_("active"), default=False)
+    paid = models.BooleanField("paid", default=False)
 
     # Denormalization (this assumes only one logo)
     sponsor_logo = models.ForeignKey("SponsorBenefit", related_name="+", null=True, blank=True, editable=False)
@@ -235,3 +236,4 @@ class SponsorBenefit(models.Model):
         elif self.benefit.type == "text":
             return ["text"]
         return []
+

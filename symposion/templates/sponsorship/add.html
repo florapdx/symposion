@@ -12,7 +12,7 @@
     <form method="POST" action="{% url sponsor_add %}" class="form-horizontal">
         {% csrf_token %}
         <legend>{% trans "Add a Sponsor" %}</legend>
-        {{ form|as_bootstrap }}
+        {{ form|as_bootstrap|safe }}
         <div class="form-actions">
             <input class="btn btn-primary" type="submit" value="Add" />
             <a class="btn" href="{% url dashboard %}">Cancel</a>
