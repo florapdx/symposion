@@ -1,9 +1,15 @@
-<p>{{ sponsor.name }} has applied to be a sponsor.</p>
+<p>{{ sponsor.name }} has applied to be a {{sponsor.level}} level sponsor.</p>
 
 <ul>
     <li><b>Applicant</b>: {{ sponsor.applicant }}</li>
     <li><b>Sponsor Name</b>: {{ sponsor.name }}</li>
-    <li><b>Sponsor Contact</b>: {{ sponsor.contact_name }}</li>
-    <li><b>Sponsor Contact Email</b>: {{ sponsor.contact_email }}</li>
+    <li><b>Sponsor Primary Contact</b>: {{ sponsor.contact_name }}</li>
+    <li><b>Sponsor Primary Contact Email</b>: {{ sponsor.contact_email }}</li>
+    <li><b>Sponsor Invoice Contact</b>: {{ sponsor.invoice_name }}</li>
+    <li><b>Sponsor Invoice Contact Email</b>: {{ sponsor.invoice_email }}</li>
+    <li><b>Sponsor Graphics Contact</b>: {{ sponsor.graphics_name }}</li>
+    <li><b>Sponsor Graphics Contact Email</b>: {{ sponsor.graphics_email }}</li>
     <li><b>Sponsorship Level</b>: {{ sponsor.level }}</li>
 </ul>
+
+<p>Please review and approve sponsor through your dashboard. You may edit the details of any sponsor from that sponsor's details page.</p>

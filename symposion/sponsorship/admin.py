@@ -30,10 +30,10 @@ class SponsorAdmin(admin.ModelAdmin):
         (None, {
             "fields": [
                 ("name", "applicant"),
-                ("level", "active"),
+                ("level", "active", "paid"),
                 "external_url",
                 "annotation",
-                ("contact_name", "contact_email")
+                ("contact_name", "contact_email"),
             ]
         }),
         ("Metadata", {

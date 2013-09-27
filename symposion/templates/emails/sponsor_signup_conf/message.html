@@ -1,0 +1,25 @@
+<p>Hello,</p>
+
+<p>This is a courtesy message confirming that you have been named as a contact on the sponsorship application for {{ sponsor.name }} for {{ event_name }}.</p>
+
+<p>Please review the information below for accuracy. Once your sponsorship has been approved, you'll be able to access your sponsorship details, upload graphics and other assets, and edit your sponsorship information from your dashboard. If you haven't done so already, please register for an account at <a href="{{ event_website }}">{{ event_website }}</a>.</p>
+
+<span><em>Sponsorship Details</em></span>
+<ul>
+    <li><b>Applicant</b>: {{ sponsor.applicant }}</li>
+    <li><b>Organization Name</b>: {{ sponsor.name }}</li>
+    <li><b>Website</b>: <a href="{{ sponsor.external_url }}">{{ sponsor.external_url }}</a></li>
+    <li><b>Primary Contact</b>: {{ sponsor.contact_name }}</li>
+    <li><b>Primary Contact Email</b>: {{ sponsor.contact_email }}</li>
+    <li><b>Invoice Contact</b>: {{ sponsor.invoice_name }}</li>
+    <li><b>Invoice Contact Email</b>: {{ sponsor.invoice_email }}</li>
+    <li><b>Graphics Contact</b>: {{ sponsor.graphics_name }}</li>
+    <li><b>Graphics Contact Email</b>: {{ sponsor.graphics_email }}</li>
+    <li><b>Sponsorship Level</b>: {{ sponsor.level }}</li>
+</ul>
+
+<p>You will receive another email on confirmation of approval. If you have questions or concerns in the meantime, or would like to check on the status of your application, please don't hesitate to email us at {{ event_email }} or call {{ event_phone }}.</p>
+
+<span>Sincerely,</span>
+
+<span>The Open Bastion</span>

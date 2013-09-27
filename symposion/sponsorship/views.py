@@ -1,4 +1,3 @@
-from collections import Counter, defaultdict
 from zipfile import ZipFile, ZIP_DEFLATED
 import StringIO #as StringIO
 import os
@@ -17,7 +16,7 @@ from symposion.sponsorship.forms import SponsorApplicationForm, SponsorDetailsFo
 from symposion.sponsorship.models import Sponsor, BenefitLevel, SponsorBenefit, SponsorLevel
 from symposion.utils.mail import send_email
 
-
+## Note: We really need to collapse these two views (add/apply) if possible--not DRY
 @login_required
 def sponsor_apply(request):
 
@@ -29,9 +28,26 @@ def sponsor_apply(request):
         form = SponsorApplicationForm(request.POST, user=request.user, choices=CHOICES)
         if form.is_valid():
             sponsor = form.save()
+
+            event_name = settings.EVENT_NAME
+            event_website = settings.EVENT_WEBSITE
+            event_email = settings.EVENT_EMAIL
+            event_phone = settings.EVENT_PHONE
+
             message_ctx = {
                 "sponsor": sponsor,
+                "event_name": event_name,
+                "event_website": event_website,
+                "event_email": event_email,
+                "event_phone": event_phone
             }
+
+            for c in sponsor.sponsor_contacts:
+                sponsor_email = c
+                send_email(
+                    [sponsor_email], "sponsor_signup_conf",
+                    context = message_ctx
+                )
             staff_members = User.objects.filter(is_staff=True)
             for staff in staff_members:
                 staff_email = staff.email
@@ -63,6 +79,33 @@ def sponsor_add(request):
         if form.is_valid():
             sponsor = form.save(commit=False)
             sponsor.save()
+
+            event_name = settings.EVENT_NAME
+            event_website = settings.EVENT_WEBSITE
+            event_email = settings.EVENT_EMAIL
+            event_phone = settings.EVENT_PHONE
+
+            message_ctx = {
+                "sponsor": sponsor,
+                "event_name": event_name,
+                "event_website": event_website,
+                "event_email": event_email,
+                "event_phone": event_phone
+            }
+
+            for c in sponsor.sponsor_contacts:
+                sponsor_email = c
+                send_email(
+                    [sponsor_email], "sponsor_signup_conf",
+                    context = message_ctx
+                )
+            staff_members = User.objects.filter(is_staff=True)
+            for staff in staff_members:
+                staff_email = staff.email
+                send_email(
+                    [staff_email], "sponsor_signup",
+                    context = message_ctx
+                )
             return redirect("sponsor_detail", pk=sponsor.pk)
     else:
         form = SponsorApplicationForm(user=request.user, choices=CHOICES)
@@ -72,7 +115,8 @@ def sponsor_add(request):
     }, context_instance=RequestContext(request))
 
 
-
+## Not DRY. Can we pull the checks and code generation, etc out into helper function?
+## ex, eventbrite_check() helper function, which we'd put in utils and import from there...
 @login_required
 def sponsor_detail(request, pk):
     sponsor = get_object_or_404(Sponsor, pk=pk)
@@ -83,6 +127,73 @@ def sponsor_detail(request, pk):
     if not sponsor in Sponsor.objects.filter(active=True) and not request.user.is_staff:
         messages.warning(request, "Thank you for your interest. Your sponsorship is pending approval. We'll be in touch soon.")
         return redirect("dashboard")
+
+    # The non-staff user should never see these types of error messages...figure something out
+    # Turn back if eventbrite not being used or if config data missing from settings
+    if not settings.EVENTBRITE == True:
+        messages.error(request, "We're sorry, Eventbrite isn't being used for this conference.")
+        return redirect('details')
+
+    elif settings.EB_APP_KEY == '' or settings.EB_USER_KEY == '' or settings.EB_EVENT_ID == '':
+        messages.error(request, "Eventbrite client has not been configured properly in settings. Please contact conference organizer about this issue.")
+        return redirect('details')
+
+    else:
+        if not sponsor.paid:
+            level = sponsor.level
+
+            # grab authentication credentials
+            eb_event_id = settings.EB_EVENT_ID
+            eb_auth_tokens = {
+                'app_key': settings.EB_APP_KEY,
+                'user_key': settings.EB_USER_KEY
+            }
+
+            # Initialize client
+            eb_client = eventbrite.EventbriteClient(eb_auth_tokens)
+
+            # Make request for basic event and ticket info
+            response = eb_client.event_get({
+                'id':eb_event_id,
+            })
+
+            event_url = response['event']['url']
+            tickets = response['event']['tickets']
+
+            for tckt in tickets:
+                if str(level) in tckt['ticket']['name']:
+                    ticket_id = tckt['ticket']['id']
+
+            code = str(level) + '_Sponsor'
+
+            ## First check to see if code exists as access code on EB
+            ## if not, handle exception and create new access code
+            try:
+                access_codes = eb_client.event_list_access_codes({'id': eb_event_id})
+            except EnvironmentError:
+                # if no access codes registered at all...
+                add_new_code = eb_client.access_code_new({
+                    'event_id': eb_event_id,
+                    'code': code,
+                    'tickets': ticket_id
+                })
+                access_codes = eb_client.event_list_access_codes({'id': eb_event_id})
+
+            codes_list = [cd['access_code']['code'] for cd in access_codes['access_codes']]
+
+            if not code in codes_list:
+                new_code = eb_client.access_code_new({
+                    'event_id': eb_event_id,
+                    'code': code,
+                    'tickets': ticket_id
+                })
+
+            ## Construct url for user to add to template
+            eb_ticket_url = event_url.rstrip('?ref=ebapi') + '?access=' + code
+
+        else:
+            # If already paid, pass empty value to avoid error on render_to_response
+            eb_ticket_url = ''
 
     formset_kwargs = {
         "instance": sponsor,
@@ -117,8 +228,24 @@ def sponsor_detail(request, pk):
         "form": form,
         "formset": formset,
         "benefits": benefits,
+        "eb_ticket_url": eb_ticket_url
     }, context_instance=RequestContext(request))
 
+
+
+@login_required
+def eventbrite_confirm(request):
+    user = request.user
+    for spsr in Sponsor.objects.filter(active=True):
+        if user.email in spsr.sponsor_contacts:
+            sponsor = spsr
+            if not request.GET['oid'] == '':
+                    sponsor.paid = True
+                    sponsor.save()
+            return redirect("sponsor_detail", pk=sponsor.pk)
+        elif user.is_staff:
+            messages.warning(request, "Remember to set paid to 'True' in admin for this sponsor.")
+            return redirect("dashboard")
 
 
 @login_required

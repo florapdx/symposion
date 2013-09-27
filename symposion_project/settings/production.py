@@ -62,3 +62,21 @@ CACHES = {}
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = get_env_setting('SECRET_KEY')
 ########## END SECRET CONFIGURATION
+
+
+######### EVENT CONFIGURATION
+# Eventbrite credentials
+# Event_id needs to be configured per event//find the ID on eventbrite
+# Generate/copy keys from Eventbrite account
+## DON'T PUSH KEYS TO PUBLIC REPOS!!!
+EVENTBRITE = ''
+EB_EVENT_ID = ''
+EB_APP_KEY = ''
+EB_USER_KEY = ''
+
+# Contact info for current event; for email templates
+EVENT_NAME = ''
+EVENT_WEBSITE = ''
+EVENT_EMAIL = '' # eg, info@djangocon.us
+EVENT_PHONE = '' # eg, our contact phone
+######### END EVENT CONFIGURATION

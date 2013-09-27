@@ -8,7 +8,7 @@ register = template.Library()
 
 
 class SponsorsNode(template.Node):
-    
+
     @classmethod
     def handle_token(cls, parser, token):
         bits = token.split_contents()
@@ -18,14 +18,14 @@ class SponsorsNode(template.Node):
             return cls(bits[3], bits[1])
         else:
             raise template.TemplateSyntaxError("%r takes 'as var' or 'level as var'" % bits[0])
-    
+
     def __init__(self, context_var, level=None):
         if level:
             self.level = template.Variable(level)
         else:
             self.level = None
         self.context_var = context_var
-    
+
     def render(self, context):
         conference = current_conference()
         if self.level:
@@ -38,7 +38,7 @@ class SponsorsNode(template.Node):
 
 
 class SponsorLevelNode(template.Node):
-    
+
     @classmethod
     def handle_token(cls, parser, token):
         bits = token.split_contents()
@@ -46,10 +46,10 @@ class SponsorLevelNode(template.Node):
             return cls(bits[2])
         else:
             raise template.TemplateSyntaxError("%r takes 'as var'" % bits[0])
-    
+
     def __init__(self, context_var):
         self.context_var = context_var
-    
+
     def render(self, context):
         conference = current_conference()
         context[self.context_var] = SponsorLevel.objects.filter(conference=conference)
@@ -69,10 +69,13 @@ def sponsors(parser, token):
 def is_active(sponsors):
     return sponsors.filter(active=True)
 
+@register.filter
+def has_paid(sponsors):
+    return sponsors.filter(paid=True)
+
 @register.tag
 def sponsor_levels(parser, token):
     """
     {% sponsor_levels as levels %}
     """
     return SponsorLevelNode.handle_token(parser, token)
-    
